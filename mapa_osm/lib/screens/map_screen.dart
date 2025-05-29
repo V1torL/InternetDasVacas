@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../models/coordinate.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
@@ -8,10 +9,10 @@ class MapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pontos =
-        ModalRoute.of(context)!.settings.arguments as List<Map<String, double>>;
+        ModalRoute.of(context)!.settings.arguments as List<Coordinate>;
 
     final List<LatLng> pontosLatLng = pontos
-        .map((p) => LatLng(p['lat']!, p['lon']!))
+        .map((p) => LatLng(p.latitude, p.longitude))
         .toList();
 
     return Scaffold(

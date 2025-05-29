@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/coordinate.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -16,7 +17,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   Future<void> carregarDados() async {
     final pontos =
-        ModalRoute.of(context)?.settings.arguments as List<Map<String, double>>?;
+        ModalRoute.of(context)?.settings.arguments as List<Coordinate>?;
 
     if (pontos == null || pontos.isEmpty) {
       if (!mounted) return;
@@ -35,9 +36,16 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            CircularProgressIndicator(),
+            SizedBox(height: 20),
+            Text('Carregando...'),
+          ],
+        ),
       ),
     );
   }

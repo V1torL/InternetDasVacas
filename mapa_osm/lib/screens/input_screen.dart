@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/coordinate.dart';
 
 class InputScreen extends StatefulWidget {
   const InputScreen({super.key});
@@ -8,7 +9,7 @@ class InputScreen extends StatefulWidget {
 }
 
 class _InputScreenState extends State<InputScreen> {
-  final List<Map<String, double>> pontos = [];
+  final List<Coordinate> pontos = [];
 
   final TextEditingController latController = TextEditingController();
   final TextEditingController lonController = TextEditingController();
@@ -19,7 +20,7 @@ class _InputScreenState extends State<InputScreen> {
 
     if (lat != null && lon != null) {
       setState(() {
-        pontos.add({'lat': lat, 'lon': lon});
+        pontos.add(Coordinate(latitude: lat, longitude: lon));
       });
       latController.clear();
       lonController.clear();
@@ -61,7 +62,7 @@ class _InputScreenState extends State<InputScreen> {
                   final ponto = pontos[index];
                   return ListTile(
                     title: Text(
-                        'Lat: ${ponto['lat']}, Lon: ${ponto['lon']}'),
+                        'Lat: ${ponto.latitude}, Lon: ${ponto.longitude}'),
                   );
                 },
               ),

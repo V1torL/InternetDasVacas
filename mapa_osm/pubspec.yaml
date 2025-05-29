@@ -33,6 +33,7 @@ flutter_icons:
 
 flutter_native_splash:
   color: "#FFFFFF"
+  text: "Mapa"
   image: assets/icone.png
 
   android: true

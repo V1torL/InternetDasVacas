@@ -9,15 +9,28 @@ class LoadingScreen extends StatefulWidget {
 
 class _LoadingScreenState extends State<LoadingScreen> {
   @override
-  void initState() {
-    super.initState();
-    _load();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    carregarDados();
   }
 
-  Future<void> _load() async {
+  Future<void> carregarDados() async {
+    final pontos =
+        ModalRoute.of(context)?.settings.arguments as List<Map<String, double>>?;
+
+    if (pontos == null || pontos.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum ponto recebido.')),
+      );
+      Navigator.pop(context);
+      return;
+    }
+
     await Future.delayed(const Duration(seconds: 2));
+
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/');
+    Navigator.pushReplacementNamed(context, '/map', arguments: pontos);
   }
 
   @override

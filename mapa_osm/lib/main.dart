@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/input_coordinates_screen.dart';
+import 'screens/input_screen.dart';
 import 'screens/loading_screen.dart';
 import 'screens/map_screen.dart';
 
@@ -14,14 +14,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'App de Mapas',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: '/loading',
+      title: 'Mapa com Flutter',
+      debugShowCheckedModeBanner: false,
+      initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),
-        '/input': (context) => const InputCoordinatesScreen(),
-        '/map': (context) => const MapScreen(),
+        '/input': (context) => const InputScreen(),
         '/loading': (context) => const LoadingScreen(),
+        '/map': (context) => const MapScreen(),
       },
     );
   }

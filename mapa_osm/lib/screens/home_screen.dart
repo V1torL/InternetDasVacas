@@ -6,24 +6,13 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('App de Mapas')),
+      appBar: AppBar(title: const Text('Tela Inicial')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              child: const Text('Inserir Coordenadas'),
-              onPressed: () {
-                Navigator.pushNamed(context, '/input');
-              },
-            ),
-            ElevatedButton(
-              child: const Text('Visualizar no Mapa'),
-              onPressed: () {
-                Navigator.pushNamed(context, '/map');
-              },
-            ),
-          ],
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/input');
+          },
+          child: const Text('Cadastrar Pontos'),
         ),
       ),
     );

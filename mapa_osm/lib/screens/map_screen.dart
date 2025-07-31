@@ -1,150 +1,214 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../models/coordinate.dart';
+import '../models/vehicle_marker.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    final pontos = ModalRoute.of(context)!.settings.arguments as List<Coordinate>;
+  IconData _getVehicleIcon(String vehicle) {
+    switch (vehicle.toLowerCase()) {
+      case 'car':
+        return Icons.directions_car;
+      case 'horse':
+        return Icons.pets;
+      case 'on_foot':
+        return Icons.directions_walk;
+      case 'bicycle':
+        return Icons.directions_bike;
+      default:
+        return Icons.location_on;
+    }
+  }
 
-    final List<LatLng> pontosLatLng = pontos
-        .map((p) => LatLng(p.latitude, p.longitude))
-        .toList();
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mapa')),
-      body: FlutterMap(
-        options: MapOptions(
-          initialCenter: pontosLatLng.isNotEmpty
-              ? pontosLatLng.first
-              : LatLng(0, 0),
-          initialZoom: 5,
-          onTap: (tapPosition, latlng) {
-            const double distanciaMaxima = 0.0005;
-            bool isInside = _isPointInsidePolygon(latlng, pontosLatLng);
-
-            bool isNearMarker = pontosLatLng.any((p) {
-              final distancia = (p.latitude - latlng.latitude).abs() + (p.longitude - latlng.longitude).abs();
-              return distancia < distanciaMaxima;
-            });
-
-            if (isInside || isNearMarker) {
-              _openTouchedGonsModal(context, 'onTap', latlng, pontosLatLng);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ponto fora do polígono.')),
-              );
-            }
-          },
-          onLongPress: (tapPosition, latlng) {
-            _openTouchedGonsModal(context, 'onLongPress', latlng, pontosLatLng);
-          },
+  void _showMarkerDetails(BuildContext context, VehicleMarker marker) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(marker.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailRow('Veículo:', marker.vehicle),
+            _buildDetailRow('Bateria:', '${marker.battery}%'),
+            _buildDetailRow('Status:', marker.emergency ? 'EMERGÊNCIA' : 'Normal'),
+            _buildDetailRow('Data:', _formatDate(marker.date)),
+            _buildDetailRow('Latitude:', marker.coordinates.latitude.toStringAsFixed(6)),
+            _buildDetailRow('Longitude:', marker.coordinates.longitude.toStringAsFixed(6)),
+          ],
         ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.app',
-          ),
-          PolygonLayer(
-            polygons: [
-              Polygon(
-                points: pontosLatLng,
-                borderColor: Colors.red,
-                borderStrokeWidth: 3,
-                color: const Color.fromARGB(100, 255, 0, 0),
-              ),
-            ],
-          ),
-          MarkerLayer(
-            markers: pontosLatLng
-                .map(
-                  (p) => Marker(
-                    width: 40,
-                    height: 40,
-                    point: p,
-                    child: const Icon(
-                      Icons.location_on,
-                      color: Colors.blue,
-                      size: 30,
-                    ),
-                  ),
-                )
-                .toList(),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
           ),
         ],
       ),
     );
   }
 
-  void _openTouchedGonsModal(
-    BuildContext context,
-    String eventType,
-    LatLng coords,
-    List<LatLng> pontosLatLng,
-  ) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: 250,
-          padding: const EdgeInsets.all(16),
-          color: Colors.white,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Center(
-                child: Text(
-                  'Evento: $eventType',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 8),
+          Text(value),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final markers = ModalRoute.of(context)!.settings.arguments as List<VehicleMarker>;
+    
+    if (markers.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mapa')),
+        body: const Center(child: Text('Nenhum marcador para exibir')),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mapa de Marcadores'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Legenda'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildLegendItem(Icons.directions_car, 'Carro'),
+                      _buildLegendItem(Icons.pets, 'Cavalo'),
+                      _buildLegendItem(Icons.directions_walk, 'A pé'),
+                      _buildLegendItem(Icons.location_on, 'Outros'),
+                      const SizedBox(height: 10),
+                      _buildLegendItem(Icons.circle, 'Emergência', color: Colors.red),
+                      _buildLegendItem(Icons.circle, 'Normal', color: Colors.blue),
+                    ],
                   ),
                 ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: FlutterMap(
+        options: MapOptions(
+          initialCenter: LatLng(
+            markers.first.coordinates.latitude,
+            markers.first.coordinates.longitude,
+          ),
+          initialZoom: 15,
+          onTap: (_, __) => Navigator.of(context).pop(),
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.app',
+          ),
+          MarkerLayer(
+            markers: markers.map((marker) => Marker(
+              width: 40,
+              height: 40,
+              point: LatLng(
+                marker.coordinates.latitude,
+                marker.coordinates.longitude,
               ),
-              const SizedBox(height: 12),
-              Text('Local tocado:'),
-              Text('Latitude: ${coords.latitude}'),
-              Text('Longitude: ${coords.longitude}'),
-              const SizedBox(height: 12),
-              const Text(
-                'Pontos do polígono:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: pontosLatLng.length,
-                  itemBuilder: (context, index) {
-                    final ponto = pontosLatLng[index];
-                    return Text(
-                        'Ponto ${index + 1}: (${ponto.latitude}, ${ponto.longitude})');
-                  },
+              child: GestureDetector(
+                onTap: () => _showMarkerDetails(context, marker),
+                child: Icon(
+                  _getVehicleIcon(marker.vehicle),
+                  color: marker.emergency ? Colors.red : Colors.blue,
+                  size: 30,
                 ),
               ),
-            ],
+            )).toList(),
           ),
-        );
-      },
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Lista de Marcadores',
+        child: const Icon(Icons.list),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return SizedBox(
+                height: MediaQuery.of(context).size.height * 0.7,
+                child: Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'Lista Completa de Marcadores',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: markers.length,
+                        itemBuilder: (context, index) {
+                          final marker = markers[index];
+                          return ListTile(
+                            leading: Icon(
+                              _getVehicleIcon(marker.vehicle),
+                              color: marker.emergency ? Colors.red : Colors.blue,
+                            ),
+                            title: Text(marker.name),
+                            subtitle: Text(
+                              '${marker.vehicle} - ${marker.battery}%'
+                            ),
+                            trailing: Text(
+                              '${marker.coordinates.latitude.toStringAsFixed(4)}, '
+                              '${marker.coordinates.longitude.toStringAsFixed(4)}'
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              _showMarkerDetails(context, marker);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(IconData icon, String text, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 8),
+          Text(text),
+        ],
+      ),
     );
   }
 }
-
-bool _isPointInsidePolygon(LatLng point, List<LatLng> polygon) {
-  int intersections = 0;
-  for (int i = 0; i < polygon.length; i++) {
-    LatLng vertex1 = polygon[i];
-    LatLng vertex2 = polygon[(i + 1) % polygon.length];
-
-    if (((vertex1.longitude > point.longitude) != (vertex2.longitude > point.longitude)) &&
-        (point.latitude < (vertex2.latitude - vertex1.latitude) * (point.longitude - vertex1.longitude) /
-                (vertex2.longitude - vertex1.longitude) +
-            vertex1.latitude)) {
-      intersections++;
-    }
-  }
-  return (intersections % 2) != 0;
-}
-
-

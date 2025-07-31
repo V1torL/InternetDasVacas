@@ -6,7 +6,7 @@ class AuthProvider with ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
 
   Future<void> login(String email, String password) async {
-    if (email == "admin@example.com" && password == "123456") {
+    if (email == "admin" && password == "123") {
       _isAuthenticated = true;
       notifyListeners();
     } else {

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import '../models/vehicle_marker.dart';
 
 class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({super.key});
+  final Widget nextScreen;
+  final String? message;
+  
+  const LoadingScreen({
+    super.key,
+    required this.nextScreen,
+    this.message,
+  });
 
   @override
   State<LoadingScreen> createState() => _LoadingScreenState();
@@ -10,29 +16,17 @@ class LoadingScreen extends StatefulWidget {
 
 class _LoadingScreenState extends State<LoadingScreen> {
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    carregarDados();
-  }
-
-  Future<void> carregarDados() async {
-    final markers =
-        ModalRoute.of(context)?.settings.arguments as List<VehicleMarker>?;
-
-    if (markers == null || markers.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nenhum marcador recebido.')),
-      );
-      Navigator.pop(context);
-      return;
+    void initState() {
+      super.initState();
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => widget.nextScreen),
+          );
+        }
+      });
     }
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/map', arguments: markers);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +34,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            CircularProgressIndicator(),
-            SizedBox(height: 20),
-            Text('Carregando ...'),
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 20),
+            Text(widget.message ?? 'Carregando...'),
           ],
         ),
       ),

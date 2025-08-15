@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'hooks/auth_provider.dart';
-import 'screens/home_screen.dart';
-import 'screens/input_screen.dart';
-import 'screens/loading_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/loading_screen.dart';
 
 void main() {
   runApp(
@@ -31,12 +29,12 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),
-          home: auth.isAuthenticated ? const HomeScreen() : const LoginScreen(),
+          home: auth.isAuthenticated 
+              ? const LoadingScreen(nextScreen: MapScreen()) 
+              : const LoginScreen(),
           routes: {
             '/login': (context) => const LoginScreen(),
-            '/home': (context) => const HomeScreen(),
-            '/input': (context) => const InputScreen(),
-            '/loading': (context) => const LoadingScreen(),
+            '/loading': (context) => const LoadingScreen(nextScreen: MapScreen()),
             '/map': (context) => const MapScreen(),
           },
         );

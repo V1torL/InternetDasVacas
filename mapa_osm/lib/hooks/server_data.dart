@@ -31,7 +31,11 @@ VehicleMarkerData useVehicleMarkerData({required BuildContext context}) {
         serverMarkers.clear();
         jsonResponse['data'].forEach((ownerName, vehicles) {
           for (var vehicleData in vehicles as List) {
-            serverMarkers.add(VehicleMarker.fromJson(vehicleData, ownerName));
+            serverMarkers.add(VehicleMarker.fromJson(
+              vehicleData, 
+              ownerName.toString()
+              )
+            );
           }
         });
       } else {

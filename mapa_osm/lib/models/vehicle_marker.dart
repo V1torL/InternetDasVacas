@@ -1,6 +1,6 @@
 import 'package:mapa_osm/models/coordinate.dart';
 class VehicleMarker {
-  final String id;
+  final dynamic id;
   final Coordinate coordinates;
   final String vehicle;
   final int battery;
